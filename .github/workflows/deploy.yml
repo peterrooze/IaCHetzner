@@ -17,7 +17,7 @@ jobs:
       uses: opentofu/setup-opentofu@v1
       with:
         tofu_version: "1.6.0"
-        tofu_wrapper: false
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
     - name: OpenTofu fmt
       id: fmt
@@ -29,7 +29,7 @@ jobs:
       run: tofu init
       env:
         TF_CLOUD_ORGANIZATION: ${{ secrets.TF_CLOUD_ORGANIZATION }}
-        TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+        TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
     - name: OpenTofu Validate
       id: validate
@@ -42,7 +42,7 @@ jobs:
       env:
         TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
         TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-        TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+        TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
 
     - name: Update Pull Request
       uses: actions/github-script@v6
@@ -81,4 +81,4 @@ jobs:
     #     TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
     #     TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
     #     TF_VAR_tf_cloud_organization: ${{ secrets.TF_CLOUD_ORGANIZATION }}
-    #     TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+    #     TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}

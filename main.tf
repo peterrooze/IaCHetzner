@@ -6,7 +6,7 @@ terraform {
     }
   }
   cloud {
-    hostname     = "app.terraform.io"
+    hostname = "app.terraform.io"
     workspaces {
       name = "hetzner-vps"
     }
