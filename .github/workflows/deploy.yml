@@ -10,25 +10,74 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup OpenTofu
       uses: opentofu/setup-opentofu@v1
       with:
         tofu_version: "1.6.0"
+        tofu_wrapper: false
+
+    - name: OpenTofu fmt
+      id: fmt
+      run: tofu fmt -check
+      continue-on-error: true
 
     - name: OpenTofu Init
+      id: init
       run: tofu init
+      env:
+        TF_CLOUD_ORGANIZATION: ${{ secrets.TF_CLOUD_ORGANIZATION }}
+        TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+    - name: OpenTofu Validate
+      id: validate
+      run: tofu validate -no-color
 
     - name: OpenTofu Plan
-      run: tofu plan -out=tfplan
+      id: plan
+      run: tofu plan -no-color
+      continue-on-error: true
       env:
         TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
         TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
 
-    - name: OpenTofu Apply
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: tofu apply -auto-approve tfplan
+    - name: Update Pull Request
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
       env:
-        TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-        TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        PLAN: "${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### OpenTofu Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+          #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
+          #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
+          #### OpenTofu Plan 📖\`${{ steps.plan.outcome }}\`
+
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>
+
+          *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    # - name: OpenTofu Apply
+    #   if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.apply == 'true'))
+    #   run: tofu apply -auto-approve
+    #   env:
+    #     TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+    #     TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+    #     TF_VAR_tf_cloud_organization: ${{ secrets.TF_CLOUD_ORGANIZATION }}
+    #     TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}

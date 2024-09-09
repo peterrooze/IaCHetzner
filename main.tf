@@ -5,10 +5,21 @@ terraform {
       version = "1.48.1"
     }
   }
+  cloud {
+    hostname     = "app.terraform.io"
+    workspaces {
+      name = "hetzner-vps"
+    }
+  }
 }
 
 provider "hcloud" {
   token = var.hcloud_token
+}
+
+resource "hcloud_ssh_key" "default" {
+  name       = "default-ssh-key"
+  public_key = var.ssh_public_key
 }
 
 resource "hcloud_server" "web" {
@@ -19,7 +30,3 @@ resource "hcloud_server" "web" {
   ssh_keys    = [hcloud_ssh_key.default.id]
 }
 
-resource "hcloud_ssh_key" "default" {
-  name       = "default-ssh-key"
-  public_key = var.ssh_public_key
-}

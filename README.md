@@ -1,4 +1,4 @@
-# IaC for my Hetzner VPS
+# IaC for Hetzner VPS
 
 
 ## Prerequisites
