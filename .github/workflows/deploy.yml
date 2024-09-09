@@ -40,6 +40,7 @@ jobs:
       run: tofu plan -no-color
       continue-on-error: true
       env:
+        TF_CLOUD_ORGANIZATION: ${{ secrets.TF_CLOUD_ORGANIZATION }}
         TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
         TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
         TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
